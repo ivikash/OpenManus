@@ -92,7 +92,7 @@ export class BrowserUseService extends EventEmitter {
       });
 
       // Run the Python script
-      const pythonPath = '/Users/vikasagr/.pyenv/shims/python';
+      const pythonPath = 'python'; // Use system Python path
       logger.debug(`Starting Python process with command: ${pythonPath} ${scriptPath}`, {
         metadata: {
           serviceId: this.serviceId,
