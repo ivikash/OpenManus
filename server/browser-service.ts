@@ -207,7 +207,7 @@ async def main():
             use_vision=${options.useVision !== false ? 'True' : 'False'},
             register_new_step_callback=new_step_callback,
             register_done_callback=done_callback,
-            headless=${headless}
+            headless=${headless ? 'True' : 'False'}
         )
         
         # Run the agent
@@ -293,7 +293,7 @@ async def main():
             use_vision=${options.useVision !== false ? 'True' : 'False'},
             register_new_step_callback=new_step_callback,
             register_done_callback=done_callback,
-            headless=${headless}
+            headless=${headless ? 'True' : 'False'}
         )
         
         # Run the agent
