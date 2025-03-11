@@ -6,6 +6,7 @@ import { Footer } from '@/components/footer';
 import { PromptInput } from '@/components/prompt-input';
 import { ChatPanel } from '@/components/chat-panel';
 import { useSocket } from '@/hooks/use-socket';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Message {
   id: string;
@@ -98,10 +99,27 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 container mx-auto py-8">
+      <main className="flex-1 container mx-auto py-8 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <PromptInput onSubmit={handleSubmitPrompt} isLoading={isLoading} />
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <PromptInput onSubmit={handleSubmitPrompt} isLoading={isLoading} />
+              </CardContent>
+            </Card>
+            <div className="text-sm text-muted-foreground">
+              {isConnected ? (
+                <span className="flex items-center">
+                  <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                  Connected to server
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span>
+                  Disconnected from server
+                </span>
+              )}
+            </div>
           </div>
           <div>
             <ChatPanel messages={messages} />

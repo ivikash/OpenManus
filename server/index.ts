@@ -1,9 +1,11 @@
 import express from 'express';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { Agent } from 'browser-use';
-import { ChatOpenAI } from '@langchain/openai';
 import dotenv from 'dotenv';
+import path from 'path';
+import { BrowserUseService } from './browser-service';
+
+dotenv.config();
 
 dotenv.config();
 
@@ -16,21 +18,39 @@ const io = new SocketIOServer(server, {
   },
 });
 
-// Custom event handler for browser-use
-const customEventHandler = (event: any) => {
-  io.emit('automation:log', {
-    id: Date.now().toString(),
-    text: event.message || JSON.stringify(event),
-    type: 'system',
-    timestamp: new Date().toLocaleTimeString(),
-  });
-};
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Add a simple route for testing
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
+
+// Create a map to store browser-use services for each client
+const browserUseServices = new Map();
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
+  
+  // Create a new browser-use service for this client
+  const browserUseService = new BrowserUseService();
+  browserUseServices.set(socket.id, browserUseService);
+  
+  // Forward browser-use service events to the client
+  browserUseService.on('log', (message) => {
+    socket.emit('automation:log', message);
+  });
+  
+  browserUseService.on('complete', (result) => {
+    socket.emit('automation:complete', result);
+  });
 
-  socket.on('prompt:submit', async (prompt: string) => {
+  socket.on('prompt:submit', async (data) => {
     try {
+      const { prompt, options = {} } = typeof data === 'string' 
+        ? { prompt: data, options: {} } 
+        : data;
+      
       io.emit('automation:log', {
         id: Date.now().toString(),
         text: `Starting automation with prompt: "${prompt}"`,
@@ -38,42 +58,46 @@ io.on('connection', (socket) => {
         timestamp: new Date().toLocaleTimeString(),
       });
 
-      // Initialize browser-use agent
-      const agent = new Agent({
+      // Run browser-use automation
+      await browserUseService.runAutomation({
         task: prompt,
-        llm: new ChatOpenAI({ model: 'gpt-4o' }),
-        onEvent: customEventHandler,
+        model: options.model || 'llama2',
+        useVision: options.useVision !== false,
+        modelProvider: options.modelProvider || 'ollama',
+        apiKey: process.env.OPENAI_API_KEY,
       });
-
-      // Run the agent
-      await agent.run();
-
-      io.emit('automation:log', {
-        id: Date.now().toString(),
-        text: 'Automation completed successfully',
-        type: 'system',
-        timestamp: new Date().toLocaleTimeString(),
-      });
-
-      io.emit('automation:complete');
     } catch (error) {
       console.error('Automation error:', error);
       
-      io.emit('automation:log', {
+      socket.emit('automation:log', {
         id: Date.now().toString(),
         text: `Error: ${error instanceof Error ? error.message : String(error)}`,
         type: 'error',
         timestamp: new Date().toLocaleTimeString(),
       });
       
-      io.emit('automation:error', {
+      socket.emit('automation:error', {
         message: error instanceof Error ? error.message : String(error),
       });
     }
   });
 
+  socket.on('automation:stop', () => {
+    const service = browserUseServices.get(socket.id);
+    if (service) {
+      service.stopAutomation();
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
+    
+    // Clean up the browser-use service
+    const service = browserUseServices.get(socket.id);
+    if (service) {
+      service.stopAutomation();
+      browserUseServices.delete(socket.id);
+    }
   });
 });
 
@@ -81,4 +105,5 @@ const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`API endpoint: http://localhost:${PORT}/api/health`);
 });
