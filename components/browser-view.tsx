@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Card, CardContent } from './ui/card';
 
@@ -6,7 +8,7 @@ interface BrowserViewProps {
   isLoading: boolean;
 }
 
-export function BrowserView({ screenshot, isLoading }: BrowserViewProps) {
+export const BrowserView = ({ screenshot, isLoading }: BrowserViewProps) => {
   return (
     <Card className="w-full h-full min-h-[400px] relative">
       <CardContent className="p-4">
@@ -32,4 +34,6 @@ export function BrowserView({ screenshot, isLoading }: BrowserViewProps) {
       </CardContent>
     </Card>
   );
-}
+};
+
+export default BrowserView;

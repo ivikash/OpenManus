@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-export const Header: React.FC = () => {
+export const Header = () => {
   return (
     <header className="border-b">
       <div className="container mx-auto py-4 flex items-center justify-between">
@@ -19,3 +19,5 @@ export const Header: React.FC = () => {
     </header>
   );
 };
+
+export default Header;

@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Header } from '@/components/header';
+import dynamic from 'next/dynamic';
 import { Footer } from '@/components/footer';
-import { PromptInput } from '@/components/prompt-input';
 import { ChatPanel } from '@/components/chat-panel';
-import { BrowserView } from '@/components/browser-view';
 import { useSocket } from '@/hooks/use-socket';
 import { Card, CardContent } from '@/components/ui/card';
+
+// Dynamically import components that might cause hydration issues
+const Header = dynamic(() => import('@/components/header').then(mod => ({ default: mod.Header })), { ssr: false });
+const PromptInput = dynamic(() => import('@/components/prompt-input').then(mod => ({ default: mod.PromptInput })), { ssr: false });
+const BrowserView = dynamic(() => import('@/components/browser-view').then(mod => ({ default: mod.BrowserView })), { ssr: false });
 
 interface Message {
   id: string;
@@ -26,6 +29,12 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Prevent hydration issues by only rendering after mount
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!socket) return;
@@ -117,6 +126,11 @@ export default function Home() {
       }
     });
   };
+
+  // Don't render until client-side to prevent hydration issues
+  if (!isMounted) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
