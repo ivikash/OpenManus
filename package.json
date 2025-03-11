@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "server": "ts-node src/server/index.ts",
+    "server:debug": "NODE_ENV=development DEBUG=* ts-node src/server/index.ts",
     "commit": "cz",
     "prepare": "husky"
   },
