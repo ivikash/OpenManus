@@ -1,7 +1,11 @@
 import { EventEmitter } from 'events';
 
-// This is a mock service since we can't directly run browser-use in the browser
-// In a real implementation, this would be a server-side service
+/**
+ * This is a mock service for the browser-use library that simulates the behavior
+ * of the actual server-side implementation for client-side development and testing.
+ * 
+ * In a production environment, the actual implementation is in server/browser-service.ts
+ */
 export class BrowserUseService extends EventEmitter {
   private isRunning = false;
 

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Footer } from '@/components/footer';
 import { ChatPanel } from '@/components/chat-panel';
-import { useSocket } from '@/hooks/use-socket';
+import { useSocket } from '@/hooks/useSocket';
 import { Card, CardContent } from '@/components/ui/card';
 
 // Dynamically import components that might cause hydration issues
