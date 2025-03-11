@@ -75,7 +75,7 @@ export default function Home() {
     };
   }, [socket, isConnected]);
 
-  const handleSubmitPrompt = (prompt: string) => {
+  const handleSubmitPrompt = (prompt: string, options: { model: string, modelProvider: string }) => {
     if (!socket || !isConnected) {
       setMessages(prev => [
         ...prev,
@@ -104,7 +104,13 @@ export default function Home() {
     ]);
 
     setIsLoading(true);
-    socket.emit('prompt:submit', prompt);
+    socket.emit('prompt:submit', { 
+      prompt, 
+      options: {
+        model: options.model,
+        modelProvider: options.modelProvider
+      }
+    });
   };
 
   return (
