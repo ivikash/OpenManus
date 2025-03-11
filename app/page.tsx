@@ -5,7 +5,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { PromptInput } from '@/components/prompt-input';
 import { ChatPanel } from '@/components/chat-panel';
-import { BrowserView } from './components/browser-view';
+import { BrowserView } from '@/components/browser-view';
 import { useSocket } from '@/hooks/use-socket';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -75,7 +75,7 @@ export default function Home() {
     };
   }, [socket, isConnected]);
 
-  const handleSubmitPrompt = (prompt: string, options: { model: string, modelProvider: string } = { model: 'llama2', modelProvider: 'ollama' }) => {
+  const handleSubmitPrompt = (prompt: string, options: { model: string, modelProvider: string } = { model: 'llama3.2', modelProvider: 'ollama' }) => {
     if (!socket || !isConnected) {
       setMessages(prev => [
         ...prev,
@@ -107,7 +107,7 @@ export default function Home() {
     socket.emit('prompt:submit', { 
       prompt, 
       options: {
-        model: options?.model || 'llama2',
+        model: options?.model || 'llama3.2',
         modelProvider: options?.modelProvider || 'ollama'
       }
     });
