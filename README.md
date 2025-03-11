@@ -8,13 +8,13 @@ The project follows a clean, organized structure with all code residing in the `
 
 ```
 src/
-├── app/             # Next.js App Router components
-├── components/      # Reusable UI components
-├── hooks/           # Custom React hooks
-├── lib/             # Utility functions and services
-├── pages/           # API routes (Pages Router)
-├── providers/       # React context providers
-└── server/          # Server-side code for browser automation
+├── app/                # Next.js App Router components
+│   ├── hooks/          # React hooks for app functionality
+│   ├── lib/            # Utility functions and client-side services
+│   └── providers/      # React context providers
+├── components/         # Reusable UI components
+├── pages/              # API routes (Pages Router)
+└── server/             # Server-side code for browser automation
 ```
 
 ## Getting Started
