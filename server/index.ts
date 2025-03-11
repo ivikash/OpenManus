@@ -88,7 +88,7 @@ io.on('connection', (socket) => {
       // Run browser-use automation
       await browserUseService.runAutomation({
         task: prompt,
-        model: options.model || 'llama2',
+        model: options.model || 'llama3.2',
         useVision: options.useVision !== false,
         modelProvider: options.modelProvider || 'ollama',
         apiKey: process.env.OPENAI_API_KEY

@@ -143,7 +143,7 @@ export class BrowserUseService extends EventEmitter {
   }
 
   private generatePythonScript(options: BrowserUseOptions): string {
-    const modelProvider = options.modelProvider || 'openai';
+    const modelProvider = options.modelProvider || 'ollama';
     
     if (modelProvider === 'ollama') {
       return `
@@ -194,7 +194,7 @@ async def main():
     try:
         # Initialize the Ollama LLM
         llm = ChatOllama(
-            model="${options.model || 'llama2'}",
+            model="${options.model || 'llama3.2'}",
             num_ctx=32000,
         )
         
