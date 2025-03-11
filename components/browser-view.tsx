@@ -26,7 +26,7 @@ export function BrowserView({ screenshot, isLoading }: BrowserViewProps) {
         )}
         {!isLoading && !screenshot && (
           <div className="flex items-center justify-center h-full text-muted-foreground">
-            Browser view will appear here
+            Browser view will appear here!
           </div>
         )}
       </CardContent>

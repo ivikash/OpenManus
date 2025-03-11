@@ -24,7 +24,7 @@ export function BrowserView({ screenshot, isLoading }: BrowserViewProps) {
           </div>
         ) : (
           <div className="text-muted-foreground text-xl font-medium">
-            Browser view will appear here
+            Browser view will appear here!!!
           </div>
         )}
       </CardContent>
