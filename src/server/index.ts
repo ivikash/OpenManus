@@ -68,7 +68,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Serve static files from the public directory
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../../public')));
+
+// Add a root route for testing
+app.get('/', (req: Request, res: Response) => {
+  res.send('Browser Use Server is running');
+});
 
 // Add a simple route for testing
 app.get('/api/health', (req: Request, res: Response) => {
