@@ -75,7 +75,7 @@ export default function Home() {
     };
   }, [socket, isConnected]);
 
-  const handleSubmitPrompt = (prompt: string, options: { model: string, modelProvider: string }) => {
+  const handleSubmitPrompt = (prompt: string, options: { model: string, modelProvider: string } = { model: 'llama2', modelProvider: 'ollama' }) => {
     if (!socket || !isConnected) {
       setMessages(prev => [
         ...prev,
@@ -107,8 +107,8 @@ export default function Home() {
     socket.emit('prompt:submit', { 
       prompt, 
       options: {
-        model: options.model,
-        modelProvider: options.modelProvider
+        model: options?.model || 'llama2',
+        modelProvider: options?.modelProvider || 'ollama'
       }
     });
   };
