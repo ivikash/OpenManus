@@ -1,4 +1,4 @@
-# Browser Use Demo
+# Open Manus Demo
 
 A Next.js application demonstrating browser automation capabilities.
 

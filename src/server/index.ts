@@ -72,7 +72,7 @@ app.use(express.static(path.join(__dirname, '../../public')));
 
 // Add a root route for testing
 app.get('/', (req: Request, res: Response) => {
-  res.send('Browser Use Server is running');
+  res.send('Open Manus Server is running');
 });
 
 // Add a simple route for testing

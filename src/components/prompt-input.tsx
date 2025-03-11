@@ -66,6 +66,7 @@ export const PromptInput = ({ onSubmit, isLoading = false, isDisabled = false }:
             <SelectContent>
               {modelProvider === 'ollama' ? (
                 <>
+                  <SelectItem value="deepseek-r1:8b">deepseek-r1:8b</SelectItem>
                   <SelectItem value="llama2">Llama 2</SelectItem>
                   <SelectItem value="llama3.2">Llama 3.2</SelectItem>
                   <SelectItem value="mistral">Mistral</SelectItem>

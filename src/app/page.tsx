@@ -160,10 +160,10 @@ export default function Home() {
                 </span>
               )}
             </div>
-            <ChatPanel messages={messages} />
           </div>
           <div className="h-[600px] flex flex-col">
-            <BrowserView screenshot={screenshot} isLoading={isLoading} />
+          <ChatPanel messages={messages} />
+            {/* <BrowserView screenshot={screenshot} isLoading={isLoading} /> */}
           </div>
         </div>
       </main>

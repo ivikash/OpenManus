@@ -10,7 +10,7 @@ const fontSans = FontSans({
 })
 
 export const metadata: Metadata = {
-  title: "Browser Use Demo",
+  title: "Open Manus Demo",
   description: "A demo application for browser automation",
 }
 
