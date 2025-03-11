@@ -10,7 +10,6 @@ interface BrowserUseOptions {
   useVision?: boolean;
   modelProvider?: string;
   apiKey?: string;
-  headless?: boolean;
 }
 
 export class BrowserUseService extends EventEmitter {
@@ -28,8 +27,8 @@ export class BrowserUseService extends EventEmitter {
       throw new Error('Automation is already running');
     }
 
-    // Set headless mode to false by default to show the browser
-    const headless = options.headless !== undefined ? options.headless : false;
+    // Note: We're not using headless option as it's not supported by the Agent class
+    // The browser will use the library's default behavior
 
     this.isRunning = true;
     this.emit('log', {
@@ -145,7 +144,6 @@ export class BrowserUseService extends EventEmitter {
 
   private generatePythonScript(options: BrowserUseOptions): string {
     const modelProvider = options.modelProvider || 'openai';
-    const headless = options.headless !== undefined ? options.headless : false;
     
     if (modelProvider === 'ollama') {
       return `
@@ -206,8 +204,7 @@ async def main():
             llm=llm,
             use_vision=${options.useVision !== false ? 'True' : 'False'},
             register_new_step_callback=new_step_callback,
-            register_done_callback=done_callback,
-            headless=${headless ? 'True' : 'False'}
+            register_done_callback=done_callback
         )
         
         # Run the agent
@@ -292,8 +289,7 @@ async def main():
             llm=llm,
             use_vision=${options.useVision !== false ? 'True' : 'False'},
             register_new_step_callback=new_step_callback,
-            register_done_callback=done_callback,
-            headless=${headless ? 'True' : 'False'}
+            register_done_callback=done_callback
         )
         
         # Run the agent

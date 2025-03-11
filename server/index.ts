@@ -91,8 +91,7 @@ io.on('connection', (socket) => {
         model: options.model || 'llama2',
         useVision: options.useVision !== false,
         modelProvider: options.modelProvider || 'ollama',
-        apiKey: process.env.OPENAI_API_KEY,
-        headless: false, // Set to false to show the browser
+        apiKey: process.env.OPENAI_API_KEY
       });
     } catch (error) {
       console.error('Automation error:', error);
