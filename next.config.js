@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  webpack: (config) => {
-    config.externals = [...config.externals, { canvas: "canvas" }];
-    return config;
+  swcMinify: true,
+  // Set the source directory to src
+  experimental: {
+    appDir: true,
   },
+  distDir: '.next',
 }
 
 module.exports = nextConfig

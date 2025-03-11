@@ -1,79 +1,57 @@
-# OpenManus
+# Browser Use Demo
 
-OpenManus is a web application that allows users to control browser automation using natural language prompts. It leverages the browser-use library to enable AI-powered browser interactions.
+A Next.js application demonstrating browser automation capabilities.
 
-## Features
+## Project Structure
 
-- Natural language prompt input for browser automation
-- Real-time logging of automation steps
-- Clean, modern UI built with React and Shadcn UI
-- WebSocket-based communication for real-time updates
+The project follows a clean, organized structure with all code residing in the `src` directory:
 
-## Architecture
-
-### Frontend
-- Next.js with React and TypeScript
-- Shadcn UI components
-- Socket.IO client for real-time communication
-
-### Backend
-- Express server
-- Socket.IO for WebSocket communication
-- Integration with browser-use for browser automation
+```
+src/
+├── app/             # Next.js App Router components
+├── components/      # Reusable UI components
+├── hooks/           # Custom React hooks
+├── lib/             # Utility functions and services
+├── pages/           # API routes (Pages Router)
+├── providers/       # React context providers
+└── server/          # Server-side code for browser automation
+```
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18+ and npm
-- An OpenAI API key for the browser-use library
-
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
+1. Install dependencies:
    ```bash
    npm install
    ```
-3. Copy the example environment file and add your OpenAI API key:
-   ```bash
-   cp .env.example .env
-   ```
-4. Edit the `.env` file and add your OpenAI API key
 
-### Running the Application
-
-1. Start the backend server:
-   ```bash
-   npm run server
-   ```
-
-2. In a separate terminal, start the frontend:
+2. Start the development server:
    ```bash
    npm run dev
    ```
 
-3. Open your browser and navigate to `http://localhost:3000`
+3. In a separate terminal, start the automation server:
+   ```bash
+   npm run server
+   ```
 
-## Usage
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-1. Enter a natural language prompt describing what you want the browser to do
-2. Click "Run Automation" to start the process
-3. Watch the automation logs in real-time as the browser performs the requested tasks
+## Features
 
-## Project Structure
+- Browser automation with Python
+- Real-time communication via Socket.io
+- Live browser screenshots
+- Model selection for AI-powered automation
 
-```
-/
-├── app/                  # Next.js app directory
-├── components/           # React components
-├── hooks/                # Custom React hooks
-├── lib/                  # Utility functions and services
-├── pages/                # Next.js pages (API routes)
-├── public/               # Static assets
-└── server/               # Backend server code
-```
+## Development
 
-## License
+This project uses:
+- Next.js for the frontend
+- TypeScript for type safety
+- Socket.io for real-time communication
+- Commitizen for standardized commit messages
 
-MIT
+## Commit Convention
+
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+See [COMMIT_CONVENTION.md](./COMMIT_CONVENTION.md) for details.

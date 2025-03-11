@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "server": "ts-node server/index.ts",
+    "server": "ts-node src/server/index.ts",
     "commit": "cz",
     "prepare": "husky"
   },

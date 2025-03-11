@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Footer } from '@/components/footer';
-import { ChatPanel } from '@/components/chat-panel';
-import { useSocket } from '@/hooks/useSocket';
-import { Card, CardContent } from '@/components/ui/card';
+import { Footer } from '@/src/components/footer';
+import { ChatPanel } from '@/src/components/chat-panel';
+import { useSocket } from '@/src/hooks/useSocket';
+import { Card, CardContent } from '@/src/components/ui/card';
 
 // Dynamically import components that might cause hydration issues
-const Header = dynamic(() => import('@/components/header').then(mod => ({ default: mod.Header })), { ssr: false });
-const PromptInput = dynamic(() => import('@/components/prompt-input').then(mod => ({ default: mod.PromptInput })), { ssr: false });
-const BrowserView = dynamic(() => import('@/components/browser-view').then(mod => ({ default: mod.BrowserView })), { ssr: false });
+const Header = dynamic(() => import('@/src/components/header').then(mod => ({ default: mod.Header })), { ssr: false });
+const PromptInput = dynamic(() => import('@/src/components/prompt-input').then(mod => ({ default: mod.PromptInput })), { ssr: false });
+const BrowserView = dynamic(() => import('@/src/components/browser-view').then(mod => ({ default: mod.BrowserView })), { ssr: false });
 
 interface Message {
   id: string;
