@@ -143,21 +143,20 @@ import sys
 from langchain_ollama import ChatOllama
 from browser_use import Agent
 
-# Custom event handler for logging
-class EventHandler:
-    def __call__(self, event):
-        # Format the event as JSON for structured logging
-        if isinstance(event, dict):
-            print(json.dumps({
-                "type": "system",
-                "message": event.get("message", str(event))
-            }))
-        else:
-            print(json.dumps({
-                "type": "system",
-                "message": str(event)
-            }))
-        sys.stdout.flush()
+# Setup logging function
+def log_message(message, type="system"):
+    print(json.dumps({
+        "type": type,
+        "message": message
+    }))
+    sys.stdout.flush()
+
+# Define callback functions for the Agent
+async def new_step_callback(browser_state, agent_output, step_number):
+    log_message(f"Step {step_number}: {agent_output.action_description if hasattr(agent_output, 'action_description') else 'Processing...'}")
+
+async def done_callback(history_list):
+    log_message("Task completed")
 
 async def main():
     try:
@@ -167,37 +166,32 @@ async def main():
             num_ctx=32000,
         )
         
-        # Create the agent
+        # Create the agent with proper callbacks
         agent = Agent(
             task="${options.task.replace(/"/g, '\\"')}",
             llm=llm,
             use_vision=${options.useVision !== false ? 'True' : 'False'},
-            onEvent=EventHandler()
+            register_new_step_callback=new_step_callback,
+            register_done_callback=done_callback
         )
         
         # Run the agent
         result = await agent.run()
         
         # Print the final result
-        if result.final_result():
-            print(json.dumps({
-                "type": "result",
-                "message": f"Final result: {result.final_result()}"
-            }))
+        if hasattr(result, 'final_result') and callable(result.final_result):
+            final_result = result.final_result()
+            if final_result:
+                log_message(f"Final result: {final_result}", "result")
         
         # Print visited URLs
-        urls = result.urls()
-        if urls:
-            print(json.dumps({
-                "type": "urls",
-                "message": f"Visited URLs: {', '.join(urls)}"
-            }))
+        if hasattr(result, 'urls') and callable(result.urls):
+            urls = result.urls()
+            if urls:
+                log_message(f"Visited URLs: {', '.join(urls)}", "urls")
     
     except Exception as e:
-        print(json.dumps({
-            "type": "error",
-            "message": f"Error: {str(e)}"
-        }))
+        log_message(f"Error: {str(e)}", "error")
         sys.exit(1)
 
 if __name__ == "__main__":
@@ -212,21 +206,20 @@ import sys
 from langchain_openai import ChatOpenAI
 from browser_use import Agent
 
-# Custom event handler for logging
-class EventHandler:
-    def __call__(self, event):
-        # Format the event as JSON for structured logging
-        if isinstance(event, dict):
-            print(json.dumps({
-                "type": "system",
-                "message": event.get("message", str(event))
-            }))
-        else:
-            print(json.dumps({
-                "type": "system",
-                "message": str(event)
-            }))
-        sys.stdout.flush()
+# Setup logging function
+def log_message(message, type="system"):
+    print(json.dumps({
+        "type": type,
+        "message": message
+    }))
+    sys.stdout.flush()
+
+# Define callback functions for the Agent
+async def new_step_callback(browser_state, agent_output, step_number):
+    log_message(f"Step {step_number}: {agent_output.action_description if hasattr(agent_output, 'action_description') else 'Processing...'}")
+
+async def done_callback(history_list):
+    log_message("Task completed")
 
 async def main():
     try:
@@ -236,37 +229,32 @@ async def main():
             temperature=0.0,
         )
         
-        # Create the agent
+        # Create the agent with proper callbacks
         agent = Agent(
             task="${options.task.replace(/"/g, '\\"')}",
             llm=llm,
             use_vision=${options.useVision !== false ? 'True' : 'False'},
-            onEvent=EventHandler()
+            register_new_step_callback=new_step_callback,
+            register_done_callback=done_callback
         )
         
         # Run the agent
         result = await agent.run()
         
         # Print the final result
-        if result.final_result():
-            print(json.dumps({
-                "type": "result",
-                "message": f"Final result: {result.final_result()}"
-            }))
+        if hasattr(result, 'final_result') and callable(result.final_result):
+            final_result = result.final_result()
+            if final_result:
+                log_message(f"Final result: {final_result}", "result")
         
         # Print visited URLs
-        urls = result.urls()
-        if urls:
-            print(json.dumps({
-                "type": "urls",
-                "message": f"Visited URLs: {', '.join(urls)}"
-            }))
+        if hasattr(result, 'urls') and callable(result.urls):
+            urls = result.urls()
+            if urls:
+                log_message(f"Visited URLs: {', '.join(urls)}", "urls")
     
     except Exception as e:
-        print(json.dumps({
-            "type": "error",
-            "message": f"Error: {str(e)}"
-        }))
+        log_message(f"Error: {str(e)}", "error")
         sys.exit(1)
 
 if __name__ == "__main__":
