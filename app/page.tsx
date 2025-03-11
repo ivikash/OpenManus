@@ -139,7 +139,7 @@ export default function Home() {
             </div>
             <ChatPanel messages={messages} />
           </div>
-          <div className="h-[600px]">
+          <div className="h-[600px] flex flex-col">
             <BrowserView screenshot={screenshot} isLoading={isLoading} />
           </div>
         </div>
