@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Toaster } from "@/src/app/components/ui/toaster";
+import { Toaster } from "@/components/ui/toaster";
 import logger from '@/lib/logger';
 
 export function Providers({ children }: { children: React.ReactNode }) {
