@@ -5,7 +5,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { PromptInput } from '@/components/prompt-input';
 import { ChatPanel } from '@/components/chat-panel';
-import { BrowserView } from '@/components/browser-view';
+import { BrowserView } from './components/browser-view';
 import { useSocket } from '@/hooks/use-socket';
 import { Card, CardContent } from '@/components/ui/card';
 
