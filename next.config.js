@@ -2,10 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // Set the source directory to src
-  experimental: {
-    appDir: true,
-  },
   distDir: '.next',
 }
 
