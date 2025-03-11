@@ -22,8 +22,9 @@
       "@/*": ["./*"],
       "@/src/*": ["./src/*"],
       "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/hooks/*": ["./src/hooks/*"],
+      "@/app/components/*": ["./src/app/components/*"],
+      "@/lib/*": ["./src/app/lib/*"],
+      "@/hooks/*": ["./src/app/hooks/*"],
       "@/server/*": ["./src/server/*"],
       "@/app/*": ["./src/app/*"]
     }
