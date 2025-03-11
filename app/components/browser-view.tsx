@@ -9,9 +9,9 @@ interface BrowserViewProps {
 export function BrowserView({ screenshot, isLoading }: BrowserViewProps) {
   return (
     <Card className="w-full h-full min-h-[400px] relative">
-      <CardContent className="p-4">
+      <CardContent className="p-4 h-full flex items-center justify-center">
         {isLoading && !screenshot && (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
           </div>
         )}
@@ -25,7 +25,7 @@ export function BrowserView({ screenshot, isLoading }: BrowserViewProps) {
           </div>
         )}
         {!isLoading && !screenshot && (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
+          <div className="text-muted-foreground text-lg">
             Browser view will appear here
           </div>
         )}
