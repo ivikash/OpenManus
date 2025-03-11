@@ -16,6 +16,11 @@ interface Message {
   timestamp: string;
 }
 
+interface PromptOptions {
+  model: string;
+  modelProvider: string;
+}
+
 export default function Home() {
   const { socket, isConnected } = useSocket();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -75,7 +80,7 @@ export default function Home() {
     };
   }, [socket, isConnected]);
 
-  const handleSubmitPrompt = (prompt: string, options: { model: string, modelProvider: string } = { model: 'llama3.2', modelProvider: 'ollama' }) => {
+  const handleSubmitPrompt = (prompt: string, options?: PromptOptions) => {
     if (!socket || !isConnected) {
       setMessages(prev => [
         ...prev,
@@ -97,7 +102,7 @@ export default function Home() {
       ...prev,
       {
         id: Date.now().toString(),
-        text: prompt,
+        text: `Starting automation with prompt: "${prompt}"`,
         type: 'user',
         timestamp: new Date().toLocaleTimeString()
       }
@@ -121,7 +126,11 @@ export default function Home() {
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-6">
-                <PromptInput onSubmit={handleSubmitPrompt} isLoading={isLoading} />
+                <PromptInput 
+                  onSubmit={handleSubmitPrompt} 
+                  isLoading={isLoading} 
+                  isDisabled={!isConnected}
+                />
               </CardContent>
             </Card>
             <div className="text-sm text-muted-foreground">
