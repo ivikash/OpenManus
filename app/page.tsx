@@ -5,6 +5,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { PromptInput } from '@/components/prompt-input';
 import { ChatPanel } from '@/components/chat-panel';
+import { BrowserView } from '@/components/browser-view';
 import { useSocket } from '@/hooks/use-socket';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -19,6 +20,7 @@ export default function Home() {
   const { socket, isConnected } = useSocket();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [screenshot, setScreenshot] = useState<string | null>(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -39,6 +41,11 @@ export default function Home() {
     // Listen for automation logs
     socket.on('automation:log', (message: Message) => {
       setMessages(prev => [...prev, message]);
+    });
+
+    // Listen for browser screenshots
+    socket.on('automation:screenshot', (data: { data: string }) => {
+      setScreenshot(data.data);
     });
 
     // Listen for automation completion
@@ -62,6 +69,7 @@ export default function Home() {
 
     return () => {
       socket.off('automation:log');
+      socket.off('automation:screenshot');
       socket.off('automation:complete');
       socket.off('automation:error');
     };
@@ -80,6 +88,9 @@ export default function Home() {
       ]);
       return;
     }
+
+    // Reset screenshot when starting new task
+    setScreenshot(null);
 
     // Add user prompt to messages
     setMessages(prev => [
@@ -100,7 +111,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto py-8 px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-6">
@@ -120,9 +131,10 @@ export default function Home() {
                 </span>
               )}
             </div>
-          </div>
-          <div>
             <ChatPanel messages={messages} />
+          </div>
+          <div className="h-[600px]">
+            <BrowserView screenshot={screenshot} isLoading={isLoading} />
           </div>
         </div>
       </main>

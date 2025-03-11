@@ -7,8 +7,6 @@ import { BrowserUseService } from './browser-service';
 
 dotenv.config();
 
-dotenv.config();
-
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {
@@ -45,6 +43,35 @@ io.on('connection', (socket) => {
     socket.emit('automation:complete', result);
   });
 
+  // Handle Python process output
+  browserUseService.on('pythonOutput', (data) => {
+    try {
+      const jsonData = JSON.parse(data);
+      
+      // Handle screenshot data
+      if (jsonData.type === 'screenshot' && jsonData.data) {
+        socket.emit('automation:screenshot', { data: jsonData.data });
+      }
+      // Handle other log messages
+      else if (jsonData.type && jsonData.message) {
+        socket.emit('automation:log', {
+          id: Date.now().toString(),
+          text: jsonData.message,
+          type: jsonData.type,
+          timestamp: new Date().toLocaleTimeString(),
+        });
+      }
+    } catch (e) {
+      // If not JSON, emit as plain text
+      socket.emit('automation:log', {
+        id: Date.now().toString(),
+        text: data,
+        type: 'system',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    }
+  });
+
   socket.on('prompt:submit', async (data) => {
     try {
       const { prompt, options = {} } = typeof data === 'string' 
@@ -65,6 +92,7 @@ io.on('connection', (socket) => {
         useVision: options.useVision !== false,
         modelProvider: options.modelProvider || 'ollama',
         apiKey: process.env.OPENAI_API_KEY,
+        headless: false, // Set to false to show the browser
       });
     } catch (error) {
       console.error('Automation error:', error);

@@ -10,6 +10,7 @@ interface BrowserUseOptions {
   useVision?: boolean;
   modelProvider?: string;
   apiKey?: string;
+  headless?: boolean;
 }
 
 export class BrowserUseService extends EventEmitter {
@@ -26,6 +27,9 @@ export class BrowserUseService extends EventEmitter {
     if (this.isRunning) {
       throw new Error('Automation is already running');
     }
+
+    // Set headless mode to false by default to show the browser
+    const headless = options.headless !== undefined ? options.headless : false;
 
     this.isRunning = true;
     this.emit('log', {
@@ -50,12 +54,19 @@ export class BrowserUseService extends EventEmitter {
           try {
             // Try to parse as JSON first (for structured logs)
             const jsonData = JSON.parse(output);
-            this.emit('log', {
-              id: Date.now().toString(),
-              text: jsonData.message || JSON.stringify(jsonData),
-              type: jsonData.type || 'system',
-              timestamp: new Date().toLocaleTimeString(),
-            });
+            
+            // Emit the raw output for the server to handle
+            this.emit('pythonOutput', output);
+            
+            // Also emit as a log if it's a regular message
+            if (jsonData.type !== 'screenshot') {
+              this.emit('log', {
+                id: Date.now().toString(),
+                text: jsonData.message || JSON.stringify(jsonData),
+                type: jsonData.type || 'system',
+                timestamp: new Date().toLocaleTimeString(),
+              });
+            }
           } catch (e) {
             // If not JSON, emit as plain text
             this.emit('log', {
@@ -134,6 +145,7 @@ export class BrowserUseService extends EventEmitter {
 
   private generatePythonScript(options: BrowserUseOptions): string {
     const modelProvider = options.modelProvider || 'openai';
+    const headless = options.headless !== undefined ? options.headless : false;
     
     if (modelProvider === 'ollama') {
       return `
@@ -142,6 +154,9 @@ import json
 import sys
 from langchain_ollama import ChatOllama
 from browser_use import Agent
+import base64
+from PIL import Image
+from io import BytesIO
 
 # Setup logging function
 def log_message(message, type="system"):
@@ -154,6 +169,25 @@ def log_message(message, type="system"):
 # Define callback functions for the Agent
 async def new_step_callback(browser_state, agent_output, step_number):
     log_message(f"Step {step_number}: {agent_output.action_description if hasattr(agent_output, 'action_description') else 'Processing...'}")
+    
+    # Capture and send screenshot if browser state is available
+    if browser_state and hasattr(browser_state, 'page'):
+        try:
+            screenshot = await browser_state.page.screenshot()
+            # Convert screenshot to base64
+            img = Image.open(BytesIO(screenshot))
+            buffered = BytesIO()
+            img.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            
+            # Send screenshot data
+            print(json.dumps({
+                "type": "screenshot",
+                "data": img_str
+            }))
+            sys.stdout.flush()
+        except Exception as e:
+            log_message(f"Screenshot error: {str(e)}", "error")
 
 async def done_callback(history_list):
     log_message("Task completed")
@@ -162,7 +196,7 @@ async def main():
     try:
         # Initialize the Ollama LLM
         llm = ChatOllama(
-            model="${options.model || 'llama3.2'}",
+            model="${options.model || 'llama2'}",
             num_ctx=32000,
         )
         
@@ -172,7 +206,8 @@ async def main():
             llm=llm,
             use_vision=${options.useVision !== false ? 'True' : 'False'},
             register_new_step_callback=new_step_callback,
-            register_done_callback=done_callback
+            register_done_callback=done_callback,
+            headless=${headless}
         )
         
         # Run the agent
@@ -205,6 +240,9 @@ import json
 import sys
 from langchain_openai import ChatOpenAI
 from browser_use import Agent
+import base64
+from PIL import Image
+from io import BytesIO
 
 # Setup logging function
 def log_message(message, type="system"):
@@ -217,6 +255,25 @@ def log_message(message, type="system"):
 # Define callback functions for the Agent
 async def new_step_callback(browser_state, agent_output, step_number):
     log_message(f"Step {step_number}: {agent_output.action_description if hasattr(agent_output, 'action_description') else 'Processing...'}")
+    
+    # Capture and send screenshot if browser state is available
+    if browser_state and hasattr(browser_state, 'page'):
+        try:
+            screenshot = await browser_state.page.screenshot()
+            # Convert screenshot to base64
+            img = Image.open(BytesIO(screenshot))
+            buffered = BytesIO()
+            img.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            
+            # Send screenshot data
+            print(json.dumps({
+                "type": "screenshot",
+                "data": img_str
+            }))
+            sys.stdout.flush()
+        except Exception as e:
+            log_message(f"Screenshot error: {str(e)}", "error")
 
 async def done_callback(history_list):
     log_message("Task completed")
@@ -235,7 +292,8 @@ async def main():
             llm=llm,
             use_vision=${options.useVision !== false ? 'True' : 'False'},
             register_new_step_callback=new_step_callback,
-            register_done_callback=done_callback
+            register_done_callback=done_callback,
+            headless=${headless}
         )
         
         # Run the agent
