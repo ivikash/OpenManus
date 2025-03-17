@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 import logger from '@/lib/logger';
 
 // Define types for WebSocket messages
-interface WebSocketMessage {
+interface WebSocketMessage<T = unknown> {
   event: string;
-  data: any;
+  data: T;
 }
 
 /**
@@ -18,7 +18,7 @@ interface WebSocketMessage {
 export function useSocket() {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [messageListeners] = useState<Map<string, ((data: any) => void)[]>>(new Map());
+  const [messageListeners] = useState<Map<string, ((data: unknown) => void)[]>>(new Map());
 
   useEffect(() => {
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
@@ -80,12 +80,12 @@ export function useSocket() {
       clearInterval(reconnectInterval);
       socketInstance.close();
     };
-  }, [messageListeners]);
+  }, [messageListeners, isConnected]);
 
   // Function to send messages
-  const sendMessage = useCallback((event: string, data: any) => {
+  const sendMessage = useCallback(<T>(event: string, data: T): boolean => {
     if (socket && socket.readyState === WebSocket.OPEN) {
-      const message: WebSocketMessage = { event, data };
+      const message: WebSocketMessage<T> = { event, data };
       socket.send(JSON.stringify(message));
       logger.debug('WebSocket message sent', { 
         metadata: { event }
@@ -98,7 +98,7 @@ export function useSocket() {
   }, [socket]);
 
   // Function to register event listeners
-  const on = useCallback((event: string, callback: (data: any) => void) => {
+  const on = useCallback((event: string, callback: (data: unknown) => void) => {
     if (!messageListeners.has(event)) {
       messageListeners.set(event, []);
     }

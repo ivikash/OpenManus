@@ -10,7 +10,6 @@ import { Card, CardContent } from '@/components/ui/card';
 // Dynamically import components that might cause hydration issues
 const Header = dynamic(() => import('@/components/header').then(mod => ({ default: mod.Header })), { ssr: false });
 const PromptInput = dynamic(() => import('@/components/prompt-input').then(mod => ({ default: mod.PromptInput })), { ssr: false });
-const BrowserView = dynamic(() => import('@/components/browser-view').then(mod => ({ default: mod.BrowserView })), { ssr: false });
 
 interface Message {
   id: string;
@@ -28,7 +27,6 @@ export default function Home() {
   const { isConnected, sendMessage, on } = useSocket();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [screenshot, setScreenshot] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   // Prevent hydration issues by only rendering after mount
@@ -55,10 +53,6 @@ export default function Home() {
       setMessages(prev => [...prev, message]);
     });
 
-    const unsubscribeScreenshot = on('automation:screenshot', (data: { data: string }) => {
-      setScreenshot(data.data);
-    });
-
     const unsubscribeComplete = on('automation:complete', () => {
       setIsLoading(false);
     });
@@ -79,7 +73,6 @@ export default function Home() {
     // Clean up listeners when component unmounts
     return () => {
       unsubscribeLog();
-      unsubscribeScreenshot();
       unsubscribeComplete();
       unsubscribeError();
     };
@@ -98,9 +91,6 @@ export default function Home() {
       ]);
       return;
     }
-
-    // Reset screenshot when starting new task
-    setScreenshot(null);
 
     // Add user prompt to messages
     setMessages(prev => [
@@ -159,7 +149,6 @@ export default function Home() {
           </div>
           <div className="h-[600px] flex flex-col">
             <ChatPanel messages={messages} />
-            {/* <BrowserView screenshot={screenshot} isLoading={isLoading} /> */}
           </div>
         </div>
       </main>

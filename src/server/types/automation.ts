@@ -20,7 +20,7 @@ export interface AutomationOptions {
   awsProfile?: string;
   
   // Additional options that can be passed to the browser-use agent
-  additionalOptions?: Record<string, any>;
+  additionalOptions?: Record<string, unknown>;
 }
 
 export interface LogMessage {

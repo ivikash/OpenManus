@@ -5,7 +5,7 @@ import React, { createContext, useEffect, useState } from 'react';
 interface SocketContextType {
   socket: WebSocket | null;
   isConnected: boolean;
-  sendMessage: (event: string, data: any) => void;
+  sendMessage: (event: string, data: unknown) => void;
 }
 
 export const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -61,7 +61,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Function to send messages
-  const sendMessage = (event: string, data: any) => {
+  const sendMessage = (event: string, data: unknown) => {
     if (socket && isConnected) {
       socket.send(JSON.stringify({ event, data }));
     } else {

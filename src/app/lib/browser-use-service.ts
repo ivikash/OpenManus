@@ -28,7 +28,7 @@ export class BrowserUseService extends EventEmitter {
 
     try {
       // Simulate browser-use automation steps
-      await this.simulateAutomationSteps(prompt);
+      await this.simulateAutomationSteps();
       
       this.emit('log', {
         id: Date.now().toString(),
@@ -49,7 +49,7 @@ export class BrowserUseService extends EventEmitter {
     }
   }
 
-  private async simulateAutomationSteps(prompt: string): Promise<void> {
+  private async simulateAutomationSteps(): Promise<void> {
     // This is a simulation of browser-use steps
     // In a real implementation, this would use the browser-use library
     

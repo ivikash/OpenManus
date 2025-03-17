@@ -4,15 +4,15 @@ import { useEffect, useState } from 'react';
 import logger from './logger';
 
 // Define types for WebSocket messages
-interface WebSocketMessage {
+interface WebSocketMessage<T = unknown> {
   event: string;
-  data: any;
+  data: T;
 }
 
 class WebSocketClient {
   private socket: WebSocket | null = null;
   private url: string;
-  private messageListeners: Map<string, ((data: any) => void)[]> = new Map();
+  private messageListeners: Map<string, ((data: unknown) => void)[]> = new Map();
   private isConnected: boolean = false;
   private reconnectInterval: NodeJS.Timeout | null = null;
 
@@ -77,9 +77,9 @@ class WebSocketClient {
     }, 5000);
   }
 
-  public emit(event: string, data: any) {
+  public emit<T>(event: string, data: T): boolean {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      const message: WebSocketMessage = { event, data };
+      const message: WebSocketMessage<T> = { event, data };
       this.socket.send(JSON.stringify(message));
       logger.debug('WebSocket message sent', { metadata: { event } });
       return true;
@@ -89,14 +89,14 @@ class WebSocketClient {
     }
   }
 
-  public on(event: string, callback: (data: any) => void) {
+  public on(event: string, callback: (data: unknown) => void): void {
     if (!this.messageListeners.has(event)) {
       this.messageListeners.set(event, []);
     }
     this.messageListeners.get(event)?.push(callback);
   }
 
-  public off(event: string, callback?: (data: any) => void) {
+  public off(event: string, callback?: (data: unknown) => void): void {
     if (!callback) {
       // Remove all listeners for this event
       this.messageListeners.delete(event);
@@ -112,18 +112,18 @@ class WebSocketClient {
     }
   }
 
-  private dispatchEvent(event: string, data: any) {
+  private dispatchEvent(event: string, data: unknown): void {
     const listeners = this.messageListeners.get(event);
     if (listeners) {
       listeners.forEach(listener => listener(data));
     }
   }
 
-  public getConnectionStatus() {
+  public getConnectionStatus(): boolean {
     return this.isConnected;
   }
 
-  public disconnect() {
+  public disconnect(): void {
     if (this.socket) {
       this.socket.close();
       this.socket = null;
@@ -140,7 +140,7 @@ class WebSocketClient {
 export const socket = new WebSocketClient(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
 
 // Hook for components to use the socket
-export function useSocketStatus() {
+export function useSocketStatus(): boolean {
   const [isConnected, setIsConnected] = useState(socket.getConnectionStatus());
 
   useEffect(() => {

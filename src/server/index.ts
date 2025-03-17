@@ -3,26 +3,21 @@ import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import dotenv from 'dotenv';
 import path from 'path';
-import { BrowserUseService, AutomationOptions } from './browser-service';
+import { BrowserUseService } from './browser-service';
 import logger from './utils/logger';
 import { v4 as uuidv4 } from 'uuid';
-import { PromptSubmission } from './types/automation';
 
-// Extend Express Request type
-declare global {
-  namespace Express {
-    interface Request {
-      id: string;
-      startTime: number;
-    }
-  }
+// Extend Express Request type with interface declaration
+interface ExtendedRequest extends Request {
+  id: string;
+  startTime: number;
 }
 
 dotenv.config();
 
 // Add request ID middleware
 const addRequestId = (req: Request, res: Response, next: NextFunction) => {
-  req.id = uuidv4();
+  (req as ExtendedRequest).id = uuidv4();
   next();
 };
 
@@ -41,11 +36,12 @@ app.use(express.json());
 
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
+  const extReq = req as ExtendedRequest;
   logger.info(`Incoming request`, { 
     metadata: {
       method: req.method,
       path: req.path,
-      requestId: req.id,
+      requestId: extReq.id,
       ip: req.ip,
       userAgent: req.headers['user-agent']
     }
@@ -57,14 +53,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
       metadata: {
         method: req.method,
         path: req.path,
-        requestId: req.id,
+        requestId: extReq.id,
         statusCode: res.statusCode,
-        responseTime: Date.now() - req.startTime
+        responseTime: Date.now() - extReq.startTime
       }
     });
   });
   
-  req.startTime = Date.now();
+  extReq.startTime = Date.now();
   next();
 });
 
@@ -78,12 +74,14 @@ app.get('/', (req: Request, res: Response) => {
 
 // Add a simple route for testing
 app.get('/api/health', (req: Request, res: Response) => {
-  logger.debug('Health check endpoint called', { metadata: { requestId: req.id } });
+  logger.debug('Health check endpoint called', { 
+    metadata: { requestId: (req as ExtendedRequest).id } 
+  });
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
 // Create a map to store browser-use services for each client
-const browserUseServices = new Map();
+const browserUseServices = new Map<string, BrowserUseService>();
 
 io.on('connection', (socket) => {
   logger.info(`Client connected: ${socket.id}`);
@@ -124,7 +122,7 @@ io.on('connection', (socket) => {
           timestamp: new Date().toLocaleTimeString(),
         });
       }
-    } catch (e) {
+    } catch {
       // If not JSON, emit as plain text
       logger.debug(`Emitting non-JSON output: ${data.substring(0, 100)}${data.length > 100 ? '...' : ''}`);
       socket.emit('automation:log', {
@@ -136,7 +134,22 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('prompt:submit', async (data) => {
+  interface PromptData {
+    prompt: string;
+    options?: {
+      model?: string;
+      useVision?: boolean;
+      modelProvider?: string;
+      headless?: boolean;
+      browserType?: 'chromium' | 'firefox' | 'webkit';
+      timeout?: number;
+      awsRegion?: string;
+      awsProfile?: string;
+      additionalOptions?: Record<string, unknown>;
+    };
+  }
+
+  socket.on('prompt:submit', async (data: string | PromptData) => {
     try {
       const { prompt, options = {} } = typeof data === 'string' 
         ? { prompt: data, options: {} } 
@@ -168,7 +181,7 @@ io.on('connection', (socket) => {
       });
       
       // Send detailed log to client
-      io.emit('automation:log', {
+      socket.emit('automation:log', {
         id: Date.now().toString(),
         text: `Starting automation with prompt: "${prompt}"`,
         type: 'system',
@@ -176,7 +189,7 @@ io.on('connection', (socket) => {
       });
       
       // Add configuration details to log
-      io.emit('automation:log', {
+      socket.emit('automation:log', {
         id: Date.now().toString(),
         text: `Configuration: Model Provider: ${modelProvider}, Model: ${model}, Vision: ${useVision ? 'Enabled' : 'Disabled'}`,
         type: 'config',

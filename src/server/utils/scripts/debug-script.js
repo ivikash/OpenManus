@@ -1,7 +1,7 @@
-const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
-const os = require('os');
+import { spawn } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
 
 // Create a temporary directory
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'browser-use-test-'));

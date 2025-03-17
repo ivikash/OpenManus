@@ -9,7 +9,7 @@ type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'trace';
 
 interface LogOptions {
   // Additional metadata to include with the log
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   // Whether to send this log to the server
   sendToServer?: boolean;
 }

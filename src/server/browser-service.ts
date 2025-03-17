@@ -18,11 +18,11 @@ interface BrowserUseOptions {
   timeout?: number;
   awsRegion?: string;
   awsProfile?: string;
-  additionalOptions?: Record<string, any>;
+  additionalOptions?: Record<string, unknown>;
 }
 
 export class BrowserUseService extends EventEmitter {
-  private pythonProcess: any = null;
+  private pythonProcess: ReturnType<typeof spawn> | null = null;
   private isRunning = false;
   private serviceId: string;
 
@@ -222,12 +222,12 @@ export class BrowserUseService extends EventEmitter {
                   timestamp: new Date().toLocaleTimeString(),
                 });
               }
-            } catch (e) {
+            } catch (error) {
               // If parsing fails, emit as plain text
               logger.debug(`Failed to parse Python output line as JSON`, { 
                 metadata: { 
                   serviceId: this.serviceId,
-                  error: e instanceof Error ? e.message : String(e),
+                  error: error instanceof Error ? error.message : String(error),
                   line: line.trim(),
                   timestamp: new Date().toISOString()
                 } 
@@ -265,6 +265,11 @@ export class BrowserUseService extends EventEmitter {
       });
 
       return new Promise((resolve, reject) => {
+        if (!this.pythonProcess) {
+          reject(new Error('Python process not initialized'));
+          return;
+        }
+        
         this.pythonProcess.on('close', (code: number) => {
           this.isRunning = false;
           logger.info(`Python process exited with code ${code}`, { 

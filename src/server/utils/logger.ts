@@ -80,13 +80,19 @@ const logger = winston.createLogger({
 });
 
 // Helper function to add request context
-export const addRequestContext = (req: any) => {
+export const addRequestContext = (req: {
+  id?: string;
+  method?: string;
+  path?: string;
+  ip?: string;
+  headers?: Record<string, string>;
+}) => {
   return {
     requestId: req.id || 'unknown',
     method: req.method,
     path: req.path,
     ip: req.ip,
-    userAgent: req.headers['user-agent'],
+    userAgent: req.headers?.['user-agent'],
   };
 };
 

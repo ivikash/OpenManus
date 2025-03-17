@@ -14,11 +14,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }
     });
     
-    // Log page navigation
-    const handleRouteChange = (url: string) => {
-      logger.debug(`Route changed to: ${url}`);
-    };
-    
     // Log errors
     const handleError = (event: ErrorEvent) => {
       logger.error(`Unhandled error: ${event.message}`, {
