@@ -60,7 +60,7 @@ class WebSocketClient {
         }
       };
 
-      this.socket.onerror = (event) => {
+      this.socket.onerror = () => {
         logger.error(`WebSocket connection error`, { 
           metadata: { error: 'Connection failed' } 
         });
@@ -243,5 +243,3 @@ export function useSocketStatus(): boolean {
 
   return isConnected;
 }
-
-export { socket };

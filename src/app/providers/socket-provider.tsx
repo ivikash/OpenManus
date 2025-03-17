@@ -2,7 +2,6 @@
 
 import React, { createContext, useEffect, useState } from 'react';
 import { getSocket } from '@/app/lib/socket';
-import logger from '../lib/logger';
 
 interface SocketContextType {
   isConnected: boolean;

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getSocket } from '@/app/lib/socket';
-import logger from '@/lib/logger';
 
 /**
  * Custom hook for managing WebSocket connections

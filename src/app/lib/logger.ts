@@ -45,7 +45,7 @@ const formatLogMessage = (level: LogLevel, message: string, options?: LogOptions
       } else {
         metadata = ` ${JSON.stringify(options.metadata)}`;
       }
-    } catch (err) {
+    } catch (error) {
       metadata = ` {"error": "Error stringifying metadata"}`;
     }
   }
