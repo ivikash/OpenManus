@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { socket } from "@/lib/socket";
+import { getSocket } from "@/lib/socket";
 
 export default function PromptForm() {
   const [prompt, setPrompt] = useState("");
@@ -38,6 +38,7 @@ export default function PromptForm() {
     setIsLoading(true);
     
     // Send prompt with all configuration options
+    const socket = getSocket();
     socket.emit("prompt:submit", {
       prompt,
       options: {
@@ -52,6 +53,7 @@ export default function PromptForm() {
   };
   
   const handleStop = () => {
+    const socket = getSocket();
     socket.emit("automation:stop");
   };
   
