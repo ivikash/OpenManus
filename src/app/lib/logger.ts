@@ -36,7 +36,19 @@ const shouldLog = (level: LogLevel): boolean => {
 // Format the log message with timestamp and level
 const formatLogMessage = (level: LogLevel, message: string, options?: LogOptions): string => {
   const timestamp = new Date().toISOString();
-  const metadata = options?.metadata ? ` ${JSON.stringify(options.metadata)}` : '';
+  let metadata = '';
+  if (options?.metadata) {
+    try {
+      // Handle WebSocket error objects specially
+      if (options.metadata.error instanceof Error) {
+        metadata = ` {"error": "${options.metadata.error.message}"}`;
+      } else {
+        metadata = ` ${JSON.stringify(options.metadata)}`;
+      }
+    } catch (err) {
+      metadata = ` {"error": "Error stringifying metadata"}`;
+    }
+  }
   return `[${timestamp}] [${level.toUpperCase()}] ${message}${metadata}`;
 };
 
