@@ -1,57 +1,160 @@
-# Open Manus Demo
+# OpenManus
 
-A Next.js application demonstrating browser automation capabilities.
+A web application that allows users to input prompts, which are then used to run browser-use automations. The application displays the automation steps in a chat panel in real-time.
+
+## Architecture
+
+### Frontend
+- Next.js with React and TypeScript
+- Shadcn UI components
+- Real-time updates with WebSockets
+
+### Backend
+- FastAPI Python server
+- WebSocket server for real-time communication
+- Integration with browser-use library
+
+## Setup
+
+### Prerequisites
+- Node.js 18+
+- Python 3.9+
+- uv (optional, for faster Python package installation)
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/browser-use-demo.git
+cd browser-use-demo
+```
+
+2. Install Node.js dependencies
+```bash
+npm install
+```
+
+3. Install Python package
+```bash
+# Using uv (recommended)
+pip install uv
+cd python_agent
+uv pip install -e .
+cd ..
+
+# Or using pip
+cd python_agent
+pip install -e .
+cd ..
+```
+
+4. Create a `.env` file based on `.env.example`
+```bash
+cp .env.example .env
+```
+
+5. Update the `.env` file with your configuration
+```
+PORT=3001
+OPENAI_API_KEY=your_openai_api_key_if_using_openai
+```
+
+## Running the Application
+
+1. Start the FastAPI server
+```bash
+npm run server
+```
+
+2. In a separate terminal, start the frontend development server
+```bash
+npm run dev
+```
+
+3. Open your browser and navigate to `http://localhost:3000`
 
 ## Project Structure
 
-The project follows a clean, organized structure with all code residing in the `src` directory:
-
 ```
-src/
-├── app/                # Next.js App Router components
-│   ├── hooks/          # React hooks for app functionality
-│   ├── lib/            # Utility functions and client-side services
-│   └── providers/      # React context providers
-├── components/         # Reusable UI components
-├── pages/              # API routes (Pages Router)
-└── server/             # Server-side code for browser automation
+├── python_agent/               # Python package for browser automation
+│   ├── browser_automation_agent/
+│   │   ├── __init__.py
+│   │   ├── agent.py           # Main agent implementation
+│   │   ├── cli.py             # Command-line interface
+│   │   ├── server.py          # FastAPI server
+│   │   ├── models.py          # Pydantic models
+│   │   └── logger.py          # Logging utilities
+│   ├── setup.py               # Package setup file
+│   ├── pyproject.toml         # Python project configuration
+│   └── requirements.txt       # Python dependencies
+├── src/
+│   ├── app/                   # Next.js app directory
+│   ├── components/            # React components
+│   └── lib/                   # Utility functions and libraries
+├── public/                    # Static assets
+└── .env                       # Environment variables
 ```
 
-## Getting Started
+## Configuration Options
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+The application supports various configuration options that can be set from the frontend:
 
-2. Start the development server:
-   ```bash
-   npm run dev
-   ```
+### Model Provider
+- Ollama (local models)
+- OpenAI (cloud models)
+- AWS Bedrock (cloud models)
 
-3. In a separate terminal, start the automation server:
-   ```bash
-   npm run server
-   ```
+### Models
+- For Ollama: llama3.2, llama3, llama2
+- For OpenAI: gpt-4o, gpt-4-turbo, gpt-4
+- For AWS Bedrock: Claude 3 (Sonnet, Haiku, Opus), Llama 3 70B
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Features
-
-- Browser automation with Python
-- Real-time communication via Socket.io
-- Live browser screenshots
-- Model selection for AI-powered automation
+### Browser Options
+- Vision capabilities (on/off)
+- Headless mode (on/off)
+- Browser type (chromium, firefox, webkit)
 
 ## Development
 
-This project uses:
-- Next.js for the frontend
-- TypeScript for type safety
-- Socket.io for real-time communication
-- Commitizen for standardized commit messages
+### Running in Debug Mode
+```bash
+npm run server:debug
+```
 
-## Commit Convention
+### Code Quality
+```bash
+# Format Python code
+cd python_agent
+ruff format .
 
-This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification.
-See [COMMIT_CONVENTION.md](./COMMIT_CONVENTION.md) for details.
+# Lint Python code
+ruff check .
+
+# Lint TypeScript/JavaScript code
+npm run lint
+```
+
+### Commit Convention
+This project uses conventional commits. Please follow the [commit convention](./COMMIT_CONVENTION.md).
+
+## API Documentation
+
+When running the FastAPI server, API documentation is available at:
+- Swagger UI: http://localhost:3001/docs
+- ReDoc: http://localhost:3001/redoc
+
+## WebSocket API
+
+The WebSocket API allows real-time communication between the client and server:
+
+### Client to Server Events
+- `prompt:submit`: Submit a prompt for automation
+- `automation:stop`: Stop the current automation
+
+### Server to Client Events
+- `automation:log`: Log message from the automation
+- `automation:complete`: Automation completed
+- `automation:error`: Error in automation
+
+## License
+[MIT](./LICENSE)

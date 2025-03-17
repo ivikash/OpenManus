@@ -1,32 +1,37 @@
 import { spawn } from 'child_process';
 import { EventEmitter } from 'events';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import logger from './utils/logger';
+import { AutomationOptions } from './types/automation';
 
+// Re-export the types for convenience
+export { AutomationOptions };
+
+// Internal interface used by the service
 interface BrowserUseOptions {
   task: string;
   model?: string;
   useVision?: boolean;
   modelProvider?: string;
   apiKey?: string;
+  headless?: boolean;
+  browserType?: string;
+  timeout?: number;
+  awsRegion?: string;
+  awsProfile?: string;
+  additionalOptions?: Record<string, any>;
 }
 
 export class BrowserUseService extends EventEmitter {
   private pythonProcess: any = null;
   private isRunning = false;
-  private tempDir: string;
   private serviceId: string;
 
   constructor() {
     super();
     this.serviceId = Math.random().toString(36).substring(2, 10);
-    this.tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'browser-use-'));
     logger.debug(`BrowserUseService created`, { 
       metadata: { 
-        serviceId: this.serviceId,
-        tempDir: this.tempDir 
+        serviceId: this.serviceId
       } 
     });
   }
@@ -40,9 +45,6 @@ export class BrowserUseService extends EventEmitter {
       });
       throw new Error('Automation is already running');
     }
-
-    // Note: We're not using headless option as it's not supported by the Agent class
-    // The browser will use the library's default behavior
 
     this.isRunning = true;
     logger.info(`Starting automation`, { 
@@ -80,36 +82,71 @@ export class BrowserUseService extends EventEmitter {
     });
 
     try {
-      // Create a temporary Python script
-      const scriptPath = path.join(this.tempDir, 'agent.py');
-      const scriptContent = this.generatePythonScript(options);
-      fs.writeFileSync(scriptPath, scriptContent);
-      logger.debug(`Created Python script at ${scriptPath}`, { 
-        metadata: { 
-          serviceId: this.serviceId,
-          scriptLength: scriptContent.length
-        } 
-      });
-
-      // Run the Python script
-      const pythonPath = 'python'; // Use system Python path
-      logger.debug(`Starting Python process with command: ${pythonPath} ${scriptPath}`, {
-        metadata: {
-          serviceId: this.serviceId,
-          pythonPath,
-          scriptPath,
-          timestamp: new Date().toISOString()
+      // Prepare command line arguments for the Python package
+      const args = [
+        '--task', options.task,
+        '--model-provider', modelProvider,
+        '--model-name', model
+      ];
+      
+      // Add optional arguments
+      if (options.useVision === false) {
+        args.push('--no-vision');
+      }
+      
+      if (options.apiKey) {
+        args.push('--api-key', options.apiKey);
+      }
+      
+      if (options.headless === false) {
+        args.push('--no-headless');
+      }
+      
+      if (options.browserType) {
+        args.push('--browser-type', options.browserType);
+      }
+      
+      if (options.timeout) {
+        args.push('--timeout', options.timeout.toString());
+      }
+      
+      // Add AWS Bedrock specific options
+      if (modelProvider === 'bedrock') {
+        if (options.awsRegion) {
+          args.push('--aws-region', options.awsRegion);
         }
-      });
+        
+        if (options.awsProfile) {
+          args.push('--aws-profile', options.awsProfile);
+        }
+      }
+      
+      // Add logging options
+      args.push('--log-level', 'INFO');
       
       // Set environment variables for the Python process
       const env = {
         ...process.env,
         PYTHONUNBUFFERED: '1', // Force Python to run unbuffered
-        BROWSER_USE_LOG_LEVEL: 'DEBUG'
+        BROWSER_USE_LOG_LEVEL: 'DEBUG',
+        OPENAI_API_KEY: ''
       };
       
-      this.pythonProcess = spawn(pythonPath, [scriptPath], { env });
+      // If using OpenAI and no API key was provided as an argument, try to use the one from env
+      if (modelProvider === 'openai' && !options.apiKey && process.env.OPENAI_API_KEY) {
+        env.OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+      }
+      
+      logger.debug(`Starting browser-agent with arguments`, {
+        metadata: {
+          serviceId: this.serviceId,
+          args: args.join(' '),
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      // Start the Python process using the browser-agent CLI
+      this.pythonProcess = spawn('browser-agent', args, { env });
       
       if (!this.pythonProcess || !this.pythonProcess.pid) {
         throw new Error('Failed to start Python process');
@@ -315,128 +352,5 @@ export class BrowserUseService extends EventEmitter {
       });
       this.emit('complete', { success: false, stopped: true });
     }
-  }
-
-  /**
-   * Generates a Python script for browser automation based on the provided options.
-   * 
-   * @param options - Configuration options for the browser automation
-   * @returns A Python script as a string
-   */
-  private generatePythonScript(options: BrowserUseOptions): string {
-    const modelProvider = options.modelProvider || 'ollama';
-    // Escape the task string for Python triple quotes
-    const escapedTask = options.task.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    
-    return `#!/usr/bin/env python3
-import asyncio
-import json
-import sys
-import os
-import traceback
-import base64
-from io import BytesIO
-
-# First, print a simple message to confirm script execution
-print("Python script starting...")
-sys.stdout.flush()
-
-try:
-    ${modelProvider === 'ollama' 
-      ? 'from langchain_ollama import ChatOllama' 
-      : 'from langchain_openai import ChatOpenAI'}
-    from browser_use import Agent
-    from PIL import Image
-    
-    # Setup logging function
-    def log_message(message, type="system"):
-        print(json.dumps({
-            "type": type,
-            "message": message
-        }))
-        sys.stdout.flush()
-    
-    log_message("Python script started${modelProvider === 'ollama' ? '' : ' with OpenAI'}")
-    log_message(f"Current working directory: {os.getcwd()}")
-    log_message(f"Python version: {sys.version}")
-    
-    # Define callback functions for the Agent
-    async def new_step_callback(browser_state, agent_output, step_number):
-        log_message(f"Step {step_number}: {agent_output.action_description if hasattr(agent_output, 'action_description') else 'Processing...'}")
-        
-        # Capture and send screenshot if browser state is available
-        if browser_state and hasattr(browser_state, 'page'):
-            try:
-                screenshot = await browser_state.page.screenshot()
-                # Convert screenshot to base64
-                img = Image.open(BytesIO(screenshot))
-                buffered = BytesIO()
-                img.save(buffered, format="PNG")
-                img_str = base64.b64encode(buffered.getvalue()).decode()
-                
-                # Send screenshot data
-                print(json.dumps({
-                    "type": "screenshot",
-                    "data": img_str
-                }))
-                sys.stdout.flush()
-            except Exception as e:
-                log_message(f"Screenshot error: {str(e)}", "error")
-    
-    async def done_callback(history_list):
-        log_message("Task completed")
-    
-    async def main():
-        try:
-            # Initialize the ${modelProvider === 'ollama' ? 'Ollama LLM' : 'LLM'}
-            log_message("Initializing ${modelProvider === 'ollama' ? 'Ollama' : 'OpenAI'} with model: ${options.model || (modelProvider === 'ollama' ? 'llama3.2' : 'gpt-4o')}")
-            llm = ${modelProvider === 'ollama' ? 'ChatOllama' : 'ChatOpenAI'}(
-                model="${options.model || (modelProvider === 'ollama' ? 'llama3.2' : 'gpt-4o')}",
-                ${modelProvider === 'ollama' ? 'num_ctx=32000,' : 'temperature=0.0,'}
-            )
-            
-            task = """${escapedTask}"""
-            log_message(f"Creating Agent with task: {task}")
-            
-            # Create the agent with proper callbacks
-            agent = Agent(
-                task=task,
-                llm=llm,
-                use_vision=${options.useVision !== false ? 'True' : 'False'},
-                register_new_step_callback=new_step_callback,
-                register_done_callback=done_callback
-            )
-            
-            # Run the agent
-            log_message("Running the agent...")
-            result = await agent.run()
-            
-            # Print the final result
-            if hasattr(result, 'final_result') and callable(result.final_result):
-                final_result = result.final_result()
-                if final_result:
-                    log_message(f"Final result: {final_result}", "result")
-            
-            # Print visited URLs
-            if hasattr(result, 'urls') and callable(result.urls):
-                urls = result.urls()
-                if urls:
-                    log_message(f"Visited URLs: {', '.join(urls)}", "urls")
-        
-        except Exception as e:
-            log_message(f"Error in main: {str(e)}", "error")
-            log_message(f"Traceback: {traceback.format_exc()}", "error")
-            sys.exit(1)
-    
-    if __name__ == "__main__":
-        log_message("Starting main async function")
-        asyncio.run(main())
-        log_message("Main async function completed")
-except Exception as e:
-    print(f"CRITICAL ERROR: {str(e)}")
-    print(f"TRACEBACK: {traceback.format_exc()}")
-    sys.stdout.flush()
-    sys.exit(1)
-`;
   }
 }

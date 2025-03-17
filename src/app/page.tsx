@@ -25,7 +25,7 @@ interface PromptOptions {
 }
 
 export default function Home() {
-  const { socket, isConnected } = useSocket();
+  const { isConnected, sendMessage, on } = useSocket();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
@@ -37,8 +37,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!socket) return;
-
     // Add connection status message
     if (isConnected) {
       setMessages(prev => [
@@ -52,23 +50,20 @@ export default function Home() {
       ]);
     }
 
-    // Listen for automation logs
-    socket.on('automation:log', (message: Message) => {
+    // Register event listeners using the new 'on' method
+    const unsubscribeLog = on('automation:log', (message: Message) => {
       setMessages(prev => [...prev, message]);
     });
 
-    // Listen for browser screenshots
-    socket.on('automation:screenshot', (data: { data: string }) => {
+    const unsubscribeScreenshot = on('automation:screenshot', (data: { data: string }) => {
       setScreenshot(data.data);
     });
 
-    // Listen for automation completion
-    socket.on('automation:complete', () => {
+    const unsubscribeComplete = on('automation:complete', () => {
       setIsLoading(false);
     });
 
-    // Listen for automation errors
-    socket.on('automation:error', (error: { message: string }) => {
+    const unsubscribeError = on('automation:error', (error: { message: string }) => {
       setMessages(prev => [
         ...prev,
         {
@@ -81,16 +76,17 @@ export default function Home() {
       setIsLoading(false);
     });
 
+    // Clean up listeners when component unmounts
     return () => {
-      socket.off('automation:log');
-      socket.off('automation:screenshot');
-      socket.off('automation:complete');
-      socket.off('automation:error');
+      unsubscribeLog();
+      unsubscribeScreenshot();
+      unsubscribeComplete();
+      unsubscribeError();
     };
-  }, [socket, isConnected]);
+  }, [isConnected, on]);
 
   const handleSubmitPrompt = (prompt: string, options?: PromptOptions) => {
-    if (!socket || !isConnected) {
+    if (!isConnected) {
       setMessages(prev => [
         ...prev,
         {
@@ -118,7 +114,7 @@ export default function Home() {
     ]);
 
     setIsLoading(true);
-    socket.emit('prompt:submit', { 
+    sendMessage('prompt:submit', { 
       prompt, 
       options: {
         model: options?.model || 'llama3.2',
@@ -162,7 +158,7 @@ export default function Home() {
             </div>
           </div>
           <div className="h-[600px] flex flex-col">
-          <ChatPanel messages={messages} />
+            <ChatPanel messages={messages} />
             {/* <BrowserView screenshot={screenshot} isLoading={isLoading} /> */}
           </div>
         </div>

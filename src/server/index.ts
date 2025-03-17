@@ -3,9 +3,10 @@ import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import dotenv from 'dotenv';
 import path from 'path';
-import { BrowserUseService } from './browser-service';
+import { BrowserUseService, AutomationOptions } from './browser-service';
 import logger from './utils/logger';
 import { v4 as uuidv4 } from 'uuid';
+import { PromptSubmission } from './types/automation';
 
 // Extend Express Request type
 declare global {
@@ -182,13 +183,19 @@ io.on('connection', (socket) => {
         timestamp: new Date().toLocaleTimeString(),
       });
 
-      // Run browser-use automation
+      // Run browser-use automation with extended options
       await browserUseService.runAutomation({
         task: prompt,
         model: options.model || 'llama3.2',
         useVision: options.useVision !== false,
         modelProvider: options.modelProvider || 'ollama',
-        apiKey: process.env.OPENAI_API_KEY
+        apiKey: process.env.OPENAI_API_KEY,
+        headless: options.headless !== false,
+        browserType: options.browserType || 'chromium',
+        timeout: options.timeout || 60000,
+        awsRegion: options.awsRegion || process.env.AWS_REGION || 'us-east-1',
+        awsProfile: options.awsProfile || process.env.AWS_PROFILE,
+        additionalOptions: options.additionalOptions
       });
     } catch (error) {
       logger.error(`Automation error for client: ${socket.id}`, {

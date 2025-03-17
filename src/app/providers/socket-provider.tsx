@@ -1,45 +1,76 @@
 "use client";
 
 import React, { createContext, useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
 
 interface SocketContextType {
-  socket: Socket | null;
+  socket: WebSocket | null;
   isConnected: boolean;
+  sendMessage: (event: string, data: any) => void;
 }
 
 export const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Create socket connection
-    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+    // Create WebSocket connection
+    const wsUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 
+                 `ws://${window.location.hostname}:3001/ws`;
+    
+    const socketInstance = new WebSocket(wsUrl);
     
     // Set up event listeners
-    socketInstance.on('connect', () => {
+    socketInstance.onopen = () => {
       setIsConnected(true);
-      console.log('Socket connected');
-    });
+      console.log('WebSocket connected');
+    };
     
-    socketInstance.on('disconnect', () => {
+    socketInstance.onclose = () => {
       setIsConnected(false);
-      console.log('Socket disconnected');
-    });
+      console.log('WebSocket disconnected');
+      
+      // Try to reconnect after 3 seconds
+      setTimeout(() => {
+        console.log('Attempting to reconnect...');
+        setSocket(null);
+      }, 3000);
+    };
+    
+    socketInstance.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    socketInstance.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data);
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
     
     // Save socket instance
     setSocket(socketInstance);
     
     // Clean up on unmount
     return () => {
-      socketInstance.disconnect();
+      socketInstance.close();
     };
   }, []);
 
+  // Function to send messages
+  const sendMessage = (event: string, data: any) => {
+    if (socket && isConnected) {
+      socket.send(JSON.stringify({ event, data }));
+    } else {
+      console.error('Cannot send message, socket not connected');
+    }
+  };
+
   return (
-    <SocketContext.Provider value={{ socket, isConnected }}>
+    <SocketContext.Provider value={{ socket, isConnected, sendMessage }}>
       {children}
     </SocketContext.Provider>
   );

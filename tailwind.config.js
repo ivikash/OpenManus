@@ -88,4 +88,7 @@ module.exports = {
   	}
   },
   plugins: [require("tailwindcss-animate")],
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
 }

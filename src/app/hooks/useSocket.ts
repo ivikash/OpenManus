@@ -1,56 +1,123 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useEffect, useState, useCallback } from 'react';
 import logger from '@/lib/logger';
 
+// Define types for WebSocket messages
+interface WebSocketMessage {
+  event: string;
+  data: any;
+}
+
 /**
- * Custom hook for managing socket.io connections
+ * Custom hook for managing WebSocket connections
  * 
- * This hook handles connecting to the socket server, managing connection state,
+ * This hook handles connecting to the WebSocket server, managing connection state,
  * and proper cleanup when the component unmounts.
  */
 export function useSocket() {
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [messageListeners] = useState<Map<string, ((data: any) => void)[]>>(new Map());
 
   useEffect(() => {
-    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+    // Convert http:// to ws:// or https:// to wss://
+    const wsUrl = socketUrl.replace(/^http/, 'ws') + '/ws';
     
-    logger.debug('Initializing socket connection');
+    logger.debug('Initializing WebSocket connection', { metadata: { url: wsUrl } });
     
-    function onConnect() {
+    const socketInstance = new WebSocket(wsUrl);
+    
+    socketInstance.onopen = () => {
       setIsConnected(true);
-      logger.info('Socket connected', { 
-        metadata: { socketId: socketInstance.id }
-      });
-    }
+      logger.info('WebSocket connected');
+    };
 
-    function onDisconnect() {
+    socketInstance.onclose = () => {
       setIsConnected(false);
-      logger.warn('Socket disconnected');
-    }
+      logger.warn('WebSocket disconnected');
+    };
 
-    function onError(error: Error) {
-      logger.error(`Socket error: ${error.message}`, { 
-        metadata: { stack: error.stack }
+    socketInstance.onerror = (error) => {
+      logger.error(`WebSocket error`, { 
+        metadata: { error }
       });
-    }
+    };
 
-    socketInstance.on('connect', onConnect);
-    socketInstance.on('disconnect', onDisconnect);
-    socketInstance.on('connect_error', onError);
+    socketInstance.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data) as WebSocketMessage;
+        logger.debug('WebSocket message received', { 
+          metadata: { event: message.event }
+        });
+        
+        // Dispatch to registered listeners
+        if (messageListeners.has(message.event)) {
+          const listeners = messageListeners.get(message.event) || [];
+          listeners.forEach(listener => listener(message.data));
+        }
+      } catch (error) {
+        logger.error('Error parsing WebSocket message', {
+          metadata: { error, data: event.data }
+        });
+      }
+    };
 
     setSocket(socketInstance);
 
-    return () => {
-      logger.debug('Cleaning up socket connection');
-      socketInstance.off('connect', onConnect);
-      socketInstance.off('disconnect', onDisconnect);
-      socketInstance.off('connect_error', onError);
-      socketInstance.disconnect();
-    };
-  }, []);
+    // Attempt to reconnect on disconnect
+    const reconnectInterval = setInterval(() => {
+      if (!isConnected && socketInstance.readyState === WebSocket.CLOSED) {
+        logger.info('Attempting to reconnect WebSocket');
+        const newSocket = new WebSocket(wsUrl);
+        setSocket(newSocket);
+      }
+    }, 5000);
 
-  return { socket, isConnected };
+    return () => {
+      logger.debug('Cleaning up WebSocket connection');
+      clearInterval(reconnectInterval);
+      socketInstance.close();
+    };
+  }, [messageListeners]);
+
+  // Function to send messages
+  const sendMessage = useCallback((event: string, data: any) => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      const message: WebSocketMessage = { event, data };
+      socket.send(JSON.stringify(message));
+      logger.debug('WebSocket message sent', { 
+        metadata: { event }
+      });
+      return true;
+    } else {
+      logger.warn('Cannot send message, socket not connected');
+      return false;
+    }
+  }, [socket]);
+
+  // Function to register event listeners
+  const on = useCallback((event: string, callback: (data: any) => void) => {
+    if (!messageListeners.has(event)) {
+      messageListeners.set(event, []);
+    }
+    messageListeners.get(event)?.push(callback);
+    
+    // Return function to remove the listener
+    return () => {
+      const listeners = messageListeners.get(event) || [];
+      const index = listeners.indexOf(callback);
+      if (index !== -1) {
+        listeners.splice(index, 1);
+      }
+    };
+  }, [messageListeners]);
+
+  return { 
+    socket, 
+    isConnected, 
+    sendMessage,
+    on
+  };
 }
