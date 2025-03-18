@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { getSocket } from "@/lib/socket";
+import { cn } from "@/lib/utils";
 
-export default function PromptForm() {
+function PromptForm() {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [modelProvider, setModelProvider] = useState("ollama");
@@ -58,28 +59,31 @@ export default function PromptForm() {
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-4" data-slot="prompt-form">
+      <div className="space-y-2" data-slot="prompt-input">
         <Label htmlFor="prompt">Enter your task</Label>
         <Textarea
           id="prompt"
           placeholder="Describe what you want the browser to do..."
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          className="min-h-[100px]"
+          className="size-full min-h-[100px] transition-colors duration-200"
           disabled={isLoading}
         />
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-4" data-slot="model-selectors">
+        <div className="space-y-2" data-slot="provider-select">
           <Label htmlFor="model-provider">Model Provider</Label>
           <Select 
             value={modelProvider} 
             onValueChange={handleProviderChange}
             disabled={isLoading}
           >
-            <SelectTrigger id="model-provider">
+            <SelectTrigger 
+              id="model-provider" 
+              className="transition-colors duration-200"
+            >
               <SelectValue placeholder="Select provider" />
             </SelectTrigger>
             <SelectContent>
@@ -90,14 +94,17 @@ export default function PromptForm() {
           </Select>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-2" data-slot="model-select">
           <Label htmlFor="model">Model</Label>
           <Select 
             value={model} 
             onValueChange={setModel}
             disabled={isLoading}
           >
-            <SelectTrigger id="model">
+            <SelectTrigger 
+              id="model" 
+              className="transition-colors duration-200"
+            >
               <SelectValue placeholder="Select model" />
             </SelectTrigger>
             <SelectContent>
@@ -126,25 +133,28 @@ export default function PromptForm() {
         </div>
       </div>
       
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 transition-opacity duration-200 hover:opacity-90" data-slot="vision-switch">
         <Switch 
           id="use-vision" 
           checked={useVision} 
           onCheckedChange={setUseVision}
           disabled={isLoading}
         />
-        <Label htmlFor="use-vision">Enable vision capabilities</Label>
+        <Label htmlFor="use-vision" className="cursor-pointer">Enable vision capabilities</Label>
       </div>
       
       {modelProvider === "bedrock" && (
-        <div className="space-y-2">
+        <div className="space-y-2" data-slot="aws-region">
           <Label htmlFor="aws-region">AWS Region</Label>
           <Select 
             value={awsRegion} 
             onValueChange={setAwsRegion}
             disabled={isLoading}
           >
-            <SelectTrigger id="aws-region">
+            <SelectTrigger 
+              id="aws-region" 
+              className="transition-colors duration-200"
+            >
               <SelectValue placeholder="Select AWS region" />
             </SelectTrigger>
             <SelectContent>
@@ -157,49 +167,53 @@ export default function PromptForm() {
         </div>
       )}
       
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 transition-opacity duration-200 hover:opacity-90" data-slot="advanced-switch">
         <Switch 
           id="show-advanced" 
           checked={showAdvanced} 
           onCheckedChange={setShowAdvanced}
           disabled={isLoading}
         />
-        <Label htmlFor="show-advanced">Show advanced options</Label>
+        <Label htmlFor="show-advanced" className="cursor-pointer">Show advanced options</Label>
       </div>
       
-      {showAdvanced && (
-        <div className="space-y-4 border rounded-md p-4 bg-gray-50">
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="headless" 
-              checked={headless} 
-              onCheckedChange={setHeadless}
-              disabled={isLoading}
-            />
-            <Label htmlFor="headless">Run browser in headless mode</Label>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="browser-type">Browser Type</Label>
-            <Select 
-              value={browserType} 
-              onValueChange={setBrowserType}
-              disabled={isLoading}
-            >
-              <SelectTrigger id="browser-type">
-                <SelectValue placeholder="Select browser" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="chromium">Chromium</SelectItem>
-                <SelectItem value="firefox">Firefox</SelectItem>
-                <SelectItem value="webkit">WebKit</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div className={cn(
+        "space-y-4 rounded-md p-4 bg-muted/50 transition-all duration-200",
+        showAdvanced ? "opacity-100 h-auto" : "opacity-0 h-0 overflow-hidden"
+      )} data-slot="advanced-options">
+        <div className="flex items-center space-x-2 transition-opacity duration-200 hover:opacity-90" data-slot="headless-switch">
+          <Switch 
+            id="headless" 
+            checked={headless} 
+            onCheckedChange={setHeadless}
+            disabled={isLoading}
+          />
+          <Label htmlFor="headless" className="cursor-pointer">Run browser in headless mode</Label>
         </div>
-      )}
+        
+        <div className="space-y-2" data-slot="browser-select">
+          <Label htmlFor="browser-type">Browser Type</Label>
+          <Select 
+            value={browserType} 
+            onValueChange={setBrowserType}
+            disabled={isLoading}
+          >
+            <SelectTrigger 
+              id="browser-type" 
+              className="transition-colors duration-200"
+            >
+              <SelectValue placeholder="Select browser" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="chromium">Chromium</SelectItem>
+              <SelectItem value="firefox">Firefox</SelectItem>
+              <SelectItem value="webkit">WebKit</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       
-      <div className="flex space-x-2">
+      <div className="flex space-x-2" data-slot="form-actions">
         <Button 
           type="submit" 
           disabled={isLoading || !prompt.trim()}
@@ -221,3 +235,5 @@ export default function PromptForm() {
     </form>
   );
 }
+
+export default PromptForm;

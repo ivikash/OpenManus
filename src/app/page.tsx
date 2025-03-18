@@ -8,8 +8,8 @@ import { useSocket } from '@/hooks/useSocket';
 import { Card, CardContent } from '@/components/ui/card';
 
 // Dynamically import components that might cause hydration issues
-const Header = dynamic(() => import('@/components/header').then(mod => ({ default: mod.Header })), { ssr: false });
-const PromptInput = dynamic(() => import('@/components/prompt-input').then(mod => ({ default: mod.PromptInput })), { ssr: false });
+const Header = dynamic(() => import('@/components/header').then(mod => ({ default: mod.Header })), { ssr: true });
+const PromptInput = dynamic(() => import('@/components/prompt-input').then(mod => ({ default: mod.PromptInput })), { ssr: true });
 
 interface Message {
   id: string;
