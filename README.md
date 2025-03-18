@@ -4,14 +4,16 @@ A web application that allows users to input prompts, which are then used to run
 
 ## Architecture
 
+For detailed architecture information, including data flow diagrams and dependency chains, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
 ### Frontend
 - Next.js with React and TypeScript
 - Shadcn UI components
 - Real-time updates with WebSockets
 
 ### Backend
-- FastAPI Python server
-- WebSocket server for real-time communication
+- Node.js WebSocket server
+- Python automation service
 - Integration with browser-use library
 
 ## Setup

@@ -60,7 +60,7 @@ export class BrowserUseService extends EventEmitter {
     
     // Log detailed options for debugging
     const modelProvider = options.modelProvider || 'ollama';
-    const model = options.model || (modelProvider === 'ollama' ? 'llama3.2' : 'gpt-4o');
+    const model = options.model || (modelProvider === 'ollama' ? 'deepseek-r1:8b' : 'gpt-4o');
     
     logger.debug(`Automation options details`, {
       metadata: {
@@ -98,8 +98,9 @@ export class BrowserUseService extends EventEmitter {
         args.push('--api-key', options.apiKey);
       }
       
-      if (options.headless === false) {
-        args.push('--no-headless');
+      // Add headless mode argument
+      if (options.headless !== undefined) {
+        args.push(options.headless ? '--headless' : '--no-headless');
       }
       
       if (options.browserType) {

@@ -6,6 +6,8 @@ import path from 'path';
 import { BrowserUseService } from './browser-service';
 import logger from './utils/logger';
 import { v4 as uuidv4 } from 'uuid';
+import { AutomationOptions, DEFAULT_OPTIONS, PromptSubmitPayload } from '../types/automation';
+import { validatePromptPayload, validateAutomationOptions, ValidationError } from '../utils/validation';
 
 // Extend Express Request type with interface declaration
 interface ExtendedRequest extends Request {
@@ -134,26 +136,11 @@ io.on('connection', (socket) => {
     }
   });
 
-  interface PromptData {
-    prompt: string;
-    options?: {
-      model?: string;
-      useVision?: boolean;
-      modelProvider?: string;
-      headless?: boolean;
-      browserType?: 'chromium' | 'firefox' | 'webkit';
-      timeout?: number;
-      awsRegion?: string;
-      awsProfile?: string;
-      additionalOptions?: Record<string, unknown>;
-    };
-  }
-
-  socket.on('prompt:submit', async (data: string | PromptData) => {
+  socket.on('prompt:submit', async (data: unknown) => {
     try {
-      const { prompt, options = {} } = typeof data === 'string' 
-        ? { prompt: data, options: {} } 
-        : data;
+      // Validate incoming data
+      const validatedData = validatePromptPayload(data);
+      const { prompt, options } = validatedData;
       
       // Enhanced logging for prompt submission
       logger.info(`Received prompt submission from client: ${socket.id}`, {
@@ -165,16 +152,21 @@ io.on('connection', (socket) => {
         }
       });
       
-      // Log detailed options
-      const modelProvider = options.modelProvider || 'ollama';
-      const model = options.model || (modelProvider === 'ollama' ? 'llama3.2' : 'gpt-4o');
-      const useVision = options.useVision !== false;
+      // Merge with default options
+      const finalOptions = {
+        ...DEFAULT_OPTIONS,
+        ...options
+      } as AutomationOptions;
       
+      // Validate final options
+      validateAutomationOptions(finalOptions);
+      
+      // Log detailed options
       logger.debug(`Automation configuration details`, {
         metadata: {
-          modelProvider,
-          model,
-          useVision,
+          modelProvider: finalOptions.modelProvider,
+          model: finalOptions.model,
+          useVision: finalOptions.useVision,
           socketId: socket.id,
           clientIP: socket.handshake.address
         }
@@ -191,7 +183,7 @@ io.on('connection', (socket) => {
       // Add configuration details to log
       socket.emit('automation:log', {
         id: Date.now().toString(),
-        text: `Configuration: Model Provider: ${modelProvider}, Model: ${model}, Vision: ${useVision ? 'Enabled' : 'Disabled'}`,
+        text: `Configuration: Model Provider: ${finalOptions.modelProvider}, Model: ${finalOptions.model}, Vision: ${finalOptions.useVision ? 'Enabled' : 'Disabled'}, Headless: ${finalOptions.headless ? 'Yes' : 'No'}`,
         type: 'config',
         timestamp: new Date().toLocaleTimeString(),
       });
@@ -199,16 +191,9 @@ io.on('connection', (socket) => {
       // Run browser-use automation with extended options
       await browserUseService.runAutomation({
         task: prompt,
-        model: options.model || 'llama3.2',
-        useVision: options.useVision !== false,
-        modelProvider: options.modelProvider || 'ollama',
+        ...finalOptions,
         apiKey: process.env.OPENAI_API_KEY,
-        headless: options.headless !== false,
-        browserType: options.browserType || 'chromium',
-        timeout: options.timeout || 60000,
-        awsRegion: options.awsRegion || process.env.AWS_REGION || 'us-east-1',
-        awsProfile: options.awsProfile || process.env.AWS_PROFILE,
-        additionalOptions: options.additionalOptions
+        awsProfile: process.env.AWS_PROFILE
       });
     } catch (error) {
       logger.error(`Automation error for client: ${socket.id}`, {
@@ -219,15 +204,20 @@ io.on('connection', (socket) => {
         }
       });
       
+      // Send appropriate error message to client
+      const errorMessage = error instanceof ValidationError
+        ? `Configuration error: ${error.message}`
+        : `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`;
+      
       socket.emit('automation:log', {
         id: Date.now().toString(),
-        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+        text: errorMessage,
         type: 'error',
         timestamp: new Date().toLocaleTimeString(),
       });
       
       socket.emit('automation:error', {
-        message: error instanceof Error ? error.message : String(error),
+        message: errorMessage,
       });
     }
   });

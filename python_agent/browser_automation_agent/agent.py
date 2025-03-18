@@ -80,13 +80,13 @@ class BrowserAutomationAgent:
         # Set default model based on provider if not specified
         if not model_name:
             if self.model_provider == "ollama":
-                self.model_name = "llama3.2"
+                self.model_name = "deepseek-r1:8b"
             elif self.model_provider == "openai":
                 self.model_name = "gpt-4o"
             elif self.model_provider == "bedrock":
                 self.model_name = "anthropic.claude-3-sonnet-20240229-v1:0"
             else:
-                self.model_name = "llama3.2"
+                self.model_name = "deepseek-r1:8b"
         else:
             self.model_name = model_name
 

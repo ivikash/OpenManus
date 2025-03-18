@@ -13,7 +13,7 @@ function PromptForm() {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [modelProvider, setModelProvider] = useState("ollama");
-  const [model, setModel] = useState(modelProvider === "ollama" ? "llama3.2" : "gpt-4o");
+  const [model, setModel] = useState(modelProvider === "ollama" ? "deepseek-r1:8b" : "gpt-4o");
   const [useVision, setUseVision] = useState(true);
   const [headless, setHeadless] = useState(true);
   const [browserType, setBrowserType] = useState("chromium");
@@ -24,7 +24,7 @@ function PromptForm() {
   const handleProviderChange = (value: string) => {
     setModelProvider(value);
     if (value === "ollama") {
-      setModel("llama3.2");
+      setModel("deepseek-r1:8b");
     } else if (value === "openai") {
       setModel("gpt-4o");
     } else if (value === "bedrock") {
@@ -110,6 +110,7 @@ function PromptForm() {
             <SelectContent>
               {modelProvider === "ollama" ? (
                 <>
+                  <SelectItem value="deepseek-r1:8b">DeepSeek R1 8B</SelectItem>
                   <SelectItem value="llama3.2">Llama 3.2</SelectItem>
                   <SelectItem value="llama3">Llama 3</SelectItem>
                   <SelectItem value="llama2">Llama 2</SelectItem>

@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 // Dynamically import components that might cause hydration issues
 const Header = dynamic(() => import('@/components/header').then(mod => ({ default: mod.Header })), { ssr: true });
-const PromptInput = dynamic(() => import('@/components/prompt-input').then(mod => ({ default: mod.PromptInput })), { ssr: true });
+const PromptForm = dynamic(() => import('@/components/prompt-form').then(mod => ({ default: mod.default })), { ssr: true });
 
 interface Message {
   id: string;
@@ -107,7 +107,7 @@ export default function Home() {
     sendMessage('prompt:submit', { 
       prompt, 
       options: {
-        model: options?.model || 'llama3.2',
+        model: options?.model || 'deepseek-r1:8b',
         modelProvider: options?.modelProvider || 'ollama'
       }
     });
@@ -126,10 +126,10 @@ export default function Home() {
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-6">
-                <PromptInput 
-                  onSubmit={handleSubmitPrompt} 
-                  isLoading={isLoading} 
-                  isDisabled={!isConnected}
+                <PromptForm 
+                  // onSubmit={handleSubmitPrompt} 
+                  // isLoading={isLoading} 
+                  // isDisabled={!isConnected}
                 />
               </CardContent>
             </Card>
